@@ -1,0 +1,33 @@
+<!-- kvm-plain: ordinary KVM guest (virtio, kvm-clock). Edit the CPU pins for E1.
+     Define with: virsh define vms/kvm-plain.xml -->
+<!-- DISK: one qcow2 overlay per VM, on top of a READ-ONLY base image. Create with:
+       mkdir -p /var/lib/libvirt/images
+       qemu-img create -f qcow2 -b /var/lib/libvirt/images/base.raw -F raw /var/lib/libvirt/images/vsec-plain.qcow2
+     Rebuild the overlay before EVERY session:
+       virsh destroy kvm-plain  # stop the VM if running
+       rm /var/lib/libvirt/images/vsec-plain.qcow2
+       qemu-img create -f qcow2 -b /var/lib/libvirt/images/base.raw -F raw /var/lib/libvirt/images/vsec-plain.qcow2
+     Never run kvm-plain and kvm-masked at the same time (they share CPU pins 2-3).
+     NETWORK: 'isolated' must have NO <forward> element. Check: virsh net-dumpxml isolated
+     (see vms/isolated-network.xml; define with: virsh net-define vms/isolated-network.xml; virsh net-start isolated).
+     DATA IN/OUT: While the VM is OFF, use virt-copy-out to extract session folders:
+       virt-copy-out -d kvm-plain /data/m4/s000 /host/path/to/extract/
+     To bake bench and scripts into the base image, mount the base.raw, copy files, unmount, then rebuild overlays. -->
+<domain type='kvm'>
+  <name>kvm-plain</name>
+  <memory unit='GiB'>4</memory>
+  <vcpu placement='static' cpuset='2-3'>2</vcpu>
+  <cputune><vcpupin vcpu='0' cpuset='2'/><vcpupin vcpu='1' cpuset='3'/><emulatorpin cpuset='0-1'/></cputune>
+  <os firmware='efi'><type arch='x86_64' machine='q35'>hvm</type></os>
+  <cpu mode='host-passthrough'/>
+  <clock offset='utc'/>
+  <devices>
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2' cache='none'/>
+      <source file='/var/lib/libvirt/images/vsec-plain.qcow2'/>
+      <target dev='vda' bus='virtio'/>
+    </disk>
+    <interface type='network'><source network='isolated'/><model type='virtio'/></interface>
+    <console type='pty'/>
+  </devices>
+</domain>

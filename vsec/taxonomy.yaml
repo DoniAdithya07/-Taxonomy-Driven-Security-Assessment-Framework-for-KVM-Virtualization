@@ -1,0 +1,48 @@
+# Backbone of the framework. One entry per control.
+# type: live (proves the control is active) | config (reads files) | version (compares versions to a CVE list)
+# survey: TBD = the project's own mapping has not been mapped to survey sections (not guessed here).
+# label per threat class: see THREAT_CLASSES at the bottom.
+controls:
+  - {id: C01, threat: DMA/IOMMU, module: M1, control: iommu_cmdline, type: config, severity: 3, expected: "iommu enabled on kernel command line", test: "cmdline has intel_iommu=on, amd_iommu=on or iommu=pt", fix: "add intel_iommu=on (or amd_iommu=on) to GRUB_CMDLINE_LINUX and run update-grub", source: "kernel docs: intel-iommu", survey: TBD}
+  - {id: C02, threat: DMA/IOMMU, module: M1, control: iommu_groups, type: live, severity: 3, expected: "IOMMU groups exist", test: "count of /sys/kernel/iommu_groups/* > 0 (N/A on E0)", fix: "enable VT-d/AMD-Vi in BIOS and the IOMMU kernel option", source: "kernel docs: vfio", survey: TBD}
+  - {id: C03, threat: Guest->Host, module: M1, control: qemu_seccomp_config, type: config, severity: 3, expected: "seccomp_sandbox not disabled", test: "qemu.conf seccomp_sandbox != 0", fix: "set seccomp_sandbox = 1 in /etc/libvirt/qemu.conf", source: "libvirt qemu.conf", survey: TBD}
+  - {id: C04, threat: Guest->Host, module: M1, control: qemu_seccomp_live, type: live, severity: 3, expected: "QEMU process runs under seccomp filter", test: "Seccomp: 2 in /proc/<qemu-pid>/status", fix: "enable seccomp_sandbox and restart the VM", source: "common hardening practice (no CIS benchmark consulted); proc(5)", survey: TBD}
+  - {id: C05, threat: Guest->Host, module: M1, control: svirt_config, type: config, severity: 3, expected: "security driver selinux or apparmor", test: "qemu.conf security_driver not none", fix: "set security_driver = \"apparmor\" (or selinux)", source: "libvirt security drivers", survey: TBD}
+  - {id: C06, threat: Guest->Host, module: M1, control: svirt_live, type: live, severity: 3, expected: "QEMU process confined by a per-VM label", test: "label is enforcing and not unconfined", fix: "enable AppArmor/SELinux and restart libvirtd and the VM", source: "libvirt security drivers", survey: TBD}
+  - {id: C07, threat: Guest->Host, module: M1, control: qemu_not_root, type: config, severity: 4, expected: "QEMU runs as an unprivileged user", test: "qemu.conf user != root", fix: "remove user = \"root\" from qemu.conf", source: "libvirt qemu.conf", survey: TBD}
+  - {id: C08, threat: Guest->Host, module: M1, control: clear_capabilities, type: config, severity: 2, expected: "emulator capabilities cleared", test: "qemu.conf clear_emulator_capabilities != 0", fix: "set clear_emulator_capabilities = 1", source: "libvirt qemu.conf", survey: TBD}
+  - {id: C09, threat: Side channels, module: M1, control: ksm_off, type: live, severity: 2, expected: "KSM disabled", test: "/sys/kernel/mm/ksm/run == 0", fix: "echo 0 > /sys/kernel/mm/ksm/run", source: "kernel docs: ksm", survey: TBD}
+  - {id: C10, threat: Guest->Host, module: M1, control: nested_off, type: live, severity: 2, expected: "nested virtualization off", test: "/sys/module/kvm_*/parameters/nested is N or 0", fix: "options kvm_intel nested=0 in /etc/modprobe.d", source: "kernel docs: kvm nested", survey: TBD}
+  - {id: C11, threat: Guest->Host, module: M1, control: graphics_password, type: config, severity: 3, expected: "VNC/SPICE console needs a password", test: "graphics element has passwd (or no graphics)", fix: "add passwd to <graphics> or use a Unix socket", source: "libvirt formatdomain", survey: TBD}
+  - {id: C12, threat: Guest->Host, module: M1, control: graphics_listen, type: config, severity: 3, expected: "console listens on localhost only", test: "graphics listen is 127.0.0.1/::1/socket", fix: "set listen='127.0.0.1'", source: "libvirt formatdomain", survey: TBD}
+  - {id: C13, threat: Guest->Host, module: M1, control: no_usb_redirect, type: config, severity: 2, expected: "no USB redirection", test: "no <redirdev> element", fix: "remove <redirdev> from the VM XML", source: "libvirt formatdomain", survey: TBD}
+  - {id: C14, threat: Guest->Host, module: M1, control: unused_devices, type: config, severity: 1, expected: "no sound, parallel or floppy device", test: "no <sound>, <parallel>, <disk device='floppy'>", fix: "remove the unused devices", source: "attack-surface reduction", survey: TBD}
+  - {id: C15, threat: Guest->Guest, module: M1, control: network_mode, type: config, severity: 3, expected: "VM not on a shared default network", test: "interface not on network 'default' / unfiltered bridge", fix: "move the VM to an isolated libvirt network", source: "libvirt networking", survey: TBD}
+  - {id: C16, threat: Guest->Guest, module: M1, control: guest_reachability, type: live, severity: 3, expected: "second VM unreachable", test: "scan from VM A to VM B finds no open port", fix: "isolated network or nwfilter rules", source: "own experiment", survey: TBD}
+  - {id: C17, threat: Host->VMM, module: M1, control: image_permissions, type: live, severity: 3, expected: "disk images not readable by others", test: "image files have no 'other' permission bits", fix: "chmod o-rwx on the image", source: "common hardening practice (no CIS benchmark consulted)", survey: TBD}
+  - {id: C18, threat: Host->VMM, module: M1, control: socket_permissions, type: live, severity: 3, expected: "libvirt sockets not world-writable", test: "socket mode has no 'other' write bit", fix: "chmod 0660 on the libvirt socket", source: "libvirt daemon docs", survey: TBD}
+  - {id: C19, threat: Host->VMM, module: M1, control: libvirtd_sock_perms, type: config, severity: 3, expected: "unix_sock_rw_perms is restrictive", test: "libvirtd.conf unix_sock_rw_perms not 0666/0777", fix: "set unix_sock_rw_perms = \"0770\"", source: "libvirtd.conf", survey: TBD}
+  - {id: C20, threat: Host->VMM, module: M1, control: libvirt_tcp, type: config, severity: 4, expected: "no unauthenticated TCP libvirt", test: "listen_tcp off or auth_tcp != none", fix: "disable listen_tcp or use TLS/SASL", source: "libvirtd.conf", survey: TBD}
+  - {id: C21, threat: Host->VMM, module: M1, control: savedir_permissions, type: live, severity: 3, expected: "saved-state directory private", test: "save/dump dir has no 'other' bits", fix: "chmod 0700 on the save directory", source: "own experiment (links to M2)", survey: TBD}
+  - {id: C22, threat: Guest->Host, module: M1, control: disk_cache, type: config, severity: 1, expected: "disk cache mode not unsafe", test: "no cache='unsafe' on a disk driver", fix: "use cache='none' or 'writethrough'", source: "libvirt formatdomain", survey: TBD}
+  - {id: C23, threat: VMM vulnerabilities, module: M1, control: qemu_cve, type: version, severity: 4, expected: "QEMU not older than a listed fix", test: "qemu version vs vsec/cves.yaml", fix: "upgrade QEMU", source: "NVD / vendor advisories", survey: TBD}
+  - {id: C24, threat: VMM vulnerabilities, module: M1, control: kernel_cve, type: version, severity: 4, expected: "kernel not older than a listed fix", test: "kernel version vs vsec/cves.yaml", fix: "upgrade the kernel", source: "NVD / vendor advisories", survey: TBD}
+  - {id: C25, threat: Side channels, module: M1, control: cpu_vulnerabilities, type: live, severity: 3, expected: "no CPU vulnerability reported as Vulnerable", test: "no 'Vulnerable' in /sys/devices/system/cpu/vulnerabilities/*", fix: "update microcode and kernel, boot with mitigations=auto", source: "kernel docs: hw-vuln", survey: TBD}
+  - {id: C26, threat: Side channels, module: M1, control: smt_state, type: live, severity: 2, expected: "SMT off where a vulnerability needs it", test: "SMT active and a vuln line says 'SMT vulnerable'", fix: "nosmt on kernel command line", source: "kernel docs: hw-vuln", survey: TBD}
+  - {id: C27, threat: Guest->Guest, module: M1, control: no_shared_memory, type: config, severity: 3, expected: "no memory shared between guests", test: "no <shmem> element", fix: "remove <shmem> devices", source: "libvirt formatdomain", survey: TBD}
+  - {id: C28, threat: Host->VMM, module: M1, control: default_confined, type: config, severity: 2, expected: "VMs confined by default", test: "qemu.conf security_default_confined != 0", fix: "remove security_default_confined = 0", source: "libvirt qemu.conf", survey: TBD}
+  - {id: C29, threat: Snapshot privacy, module: M2, control: snapshot_secrets, type: live, severity: 4, expected: "no secrets in a memory dump", test: "scanner finds no secrets in the dump", fix: "redact or encrypt the saved image; avoid secrets in guest memory", source: "own experiment", survey: TBD}
+  - {id: C30, threat: VMI / hidden processes, module: M3, control: hidden_process, type: live, severity: 4, expected: "no unlinked process or module", test: "pslist vs psscan and lsmod vs module scan agree", fix: "investigate the guest; rebuild from a clean image", source: "Volatility 3", survey: TBD}
+  - {id: C31, threat: Hypervisor/VMBR presence, module: M4, control: hypervisor_presence, type: live, severity: 4, expected: "detected environment equals declared environment", test: "M4 classifier output vs declared class", fix: "investigate the boot chain", source: "own experiment", survey: TBD}
+
+# Label of each threat class in the result matrix.
+threat_classes:
+  Guest->Host: Tested
+  Host->VMM: Config-proxy
+  Guest->Guest: Config-proxy
+  VMM vulnerabilities: Config-proxy
+  Side channels: Config-proxy
+  DMA/IOMMU: Tested on E1
+  Snapshot privacy: Tested
+  VMI / hidden processes: Tested
+  Hypervisor/VMBR presence: Tested

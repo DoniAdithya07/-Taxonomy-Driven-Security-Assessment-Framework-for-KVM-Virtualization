@@ -1,0 +1,10 @@
+# Development-time dependencies
+# Install with: pip install -r requirements-dev.txt
+
+# Build and test
+pytest
+ziglang  # for compile-checking bench.c without gcc (Windows)
+
+# Included from requirements.txt for testing
+-r requirements.txt
+python-pptx  # builds docs/slides/vsec_deck.pptx (docs/slides/build_deck.py)

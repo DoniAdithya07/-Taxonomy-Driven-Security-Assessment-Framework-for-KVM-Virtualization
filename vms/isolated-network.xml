@@ -1,0 +1,7 @@
+<!-- Isolated libvirt network for the M4 VMs: NO <forward> element (guests cannot reach the host LAN or internet),
+     no DHCP needed. Define and start:  virsh net-define vms/isolated-network.xml; virsh net-start isolated
+     Verify:  virsh net-dumpxml isolated   (must not contain <forward>) -->
+<network>
+  <name>isolated</name>
+  <bridge name='virbr-iso' stp='on' delay='0'/>
+</network>

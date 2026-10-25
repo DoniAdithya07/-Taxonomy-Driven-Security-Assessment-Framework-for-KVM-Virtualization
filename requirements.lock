@@ -1,0 +1,14 @@
+﻿# Exact versions of the runtime/test dependencies, from `pip freeze` in .local\venv (Windows, Python 3.11) on 2026-10-04.
+# colorama is Windows-only; drop it on Linux. Re-run the freeze on the Linux PC (E1) and commit that file if you need Linux pins.
+# Install: pip install -r requirements.lock
+colorama==0.4.6
+iniconfig==2.3.0
+joblib==1.6.0
+numpy==2.4.6
+packaging==26.3
+pluggy==1.6.0
+pytest==9.1.1
+PyYAML==6.0.3
+scikit-learn==1.9.1
+scipy==1.17.1
+threadpoolctl==3.7.0

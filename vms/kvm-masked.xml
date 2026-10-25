@@ -1,0 +1,50 @@
+<!-- kvm-masked: hides the static indicators of virtualization. A safe, NON-ADAPTIVE stand-in for a stealthy
+     hypervisor: it does not fake time (no TSC offsetting, no VM-exit latency masking).
+     Same CPU pins and memory as kvm-plain. Non-virtio disk and NIC so device names do not reveal the VM.
+     Define with: virsh define vms/kvm-masked.xml -->
+<!-- DISK: one qcow2 overlay per VM, on top of a READ-ONLY base image. Create with:
+       mkdir -p /var/lib/libvirt/images
+       qemu-img create -f qcow2 -b /var/lib/libvirt/images/base.raw -F raw /var/lib/libvirt/images/vsec-masked.qcow2
+     Rebuild the overlay before EVERY session:
+       virsh destroy kvm-masked  # stop the VM if running
+       rm /var/lib/libvirt/images/vsec-masked.qcow2
+       qemu-img create -f qcow2 -b /var/lib/libvirt/images/base.raw -F raw /var/lib/libvirt/images/vsec-masked.qcow2
+     Never run kvm-plain and kvm-masked at the same time (they share CPU pins 2-3).
+     NETWORK: 'isolated' must have NO <forward> element. Check: virsh net-dumpxml isolated
+     (see vms/isolated-network.xml; define with: virsh net-define vms/isolated-network.xml; virsh net-start isolated).
+     DATA IN/OUT: While the VM is OFF, use virt-copy-out to extract session folders:
+       virt-copy-out -d kvm-masked /data/m4/s000 /host/path/to/extract/
+     To bake bench and scripts into the base image, mount the base.raw, copy files, unmount, then rebuild overlays. -->
+<domain type='kvm'>
+  <name>kvm-masked</name>
+  <memory unit='GiB'>4</memory>
+  <vcpu placement='static' cpuset='2-3'>2</vcpu>
+  <cputune><vcpupin vcpu='0' cpuset='2'/><vcpupin vcpu='1' cpuset='3'/><emulatorpin cpuset='0-1'/></cputune>
+  <os firmware='efi'>
+    <type arch='x86_64' machine='q35'>hvm</type>
+    <smbios mode='sysinfo'/>
+  </os>
+  <sysinfo type='smbios'>
+    <bios><entry name='vendor'>American Megatrends Inc.</entry></bios>
+    <system><entry name='manufacturer'>Dell Inc.</entry><entry name='product'>OptiPlex 7090</entry></system>
+  </sysinfo>
+  <features>
+    <kvm><hidden state='on'/></kvm>
+  </features>
+  <cpu mode='host-passthrough'>
+    <feature policy='disable' name='hypervisor'/>
+  </cpu>
+  <clock offset='utc'>
+    <timer name='kvmclock' present='no'/>
+  </clock>
+  <devices>
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2' cache='none'/>
+      <source file='/var/lib/libvirt/images/vsec-masked.qcow2'/>
+      <target dev='sda' bus='sata'/>
+      <serial>WD-WCC4N1234567</serial>
+    </disk>
+    <interface type='network'><source network='isolated'/><model type='e1000e'/></interface>
+    <console type='pty'/>
+  </devices>
+</domain>

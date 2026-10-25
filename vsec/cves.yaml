@@ -1,0 +1,12 @@
+# Small CVE list for the version checks (C23, C24). Extend as needed; every entry must cite a real advisory.
+# fixed_in values were entered from memory: verify each against NVD / the vendor advisory before using results.
+# fixed_in: first version that contains the fix.
+# verified: false = entered from memory, NOT checked against NVD/the vendor advisory. While any entry for a product is
+# unverified, C23/C24 return NA ('N of M entries are unverified: list not usable for results'). Set true only after
+# checking the fix version against NVD or the vendor advisory (record the URL in docs/DATA_SOURCES.md).
+cves:
+  - {cve: CVE-2020-14364, product: qemu, fixed_in: "5.1.0", note: "USB OOB read/write, guest-to-host", verified: false}
+  - {cve: CVE-2021-3409, product: qemu, fixed_in: "6.0.0", note: "SD card emulation heap overflow", verified: false}
+  - {cve: CVE-2023-3301, product: qemu, fixed_in: "8.1.0", note: "virtio-net hot-unplug null deref", verified: false}
+  - {cve: CVE-2022-0847, product: kernel, fixed_in: "5.16.11", note: "Dirty Pipe (host privilege escalation)", verified: false}
+  - {cve: CVE-2021-22555, product: kernel, fixed_in: "5.12.0", note: "netfilter heap OOB write", verified: false}

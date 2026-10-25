@@ -1,0 +1,11 @@
+# Runtime dependencies for vsec
+# For exact pinned versions, see requirements.lock
+numpy
+scipy
+scikit-learn
+pyyaml
+pytest
+
+# External tools (run separately, not installed here):
+# - Volatility 3 (M3, run on the host with the dumps):  pip install volatility3
+# - QEMU, libvirt, Lynis, OpenSCAP: system packages
