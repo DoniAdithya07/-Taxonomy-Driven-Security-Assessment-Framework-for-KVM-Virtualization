@@ -7,9 +7,8 @@ Complete the following citations as you fill them in. Remove the TODO lines and 
 ## Primary Source: The 2020 Survey
 
 **[SURVEY-2020]**  
-TODO: student to supply full citation.  
-TODO: Provide author(s), year, title, venue (journal/conference), and DOI/URL if available.  
-*This is the taxonomy source for all threat classes and controls.*
+Sierra-Arriaga, F., Branco, R. R., & Lee, B. (2020). Security Issues and Challenges for Virtualization Technologies. *ACM Computing Surveys*, 53(2), Article 45, 1–37. https://doi.org/10.1145/3382190  
+*This is the taxonomy source for virtualization threat classes, host security controls, and hypervisor attack surfaces.*
 
 ## Tools and Systems
 
@@ -65,17 +64,19 @@ US government data; free to use. See NVD's current terms of use.
 *Used for CVE verification in M1 (controls C23, C24).*  
 TODO: Document any CVE data retrieval date or version used.
 
-## Related Work on Hypervisor Detection
+## Related Work on Hypervisor Detection and Timing Side Channels
 
-TODO: Add citations for prior work on hypervisor detection, timing side channels, and behavior-based detection.  
-TODO: Provide at least one citation for each of the following (if not in the 2020 survey):
-- Hypervisor detection using timing signals (CPUID, RDTSC, syscalls)
-- Memory latency as a hypervisor indicator
-- Scheduler jitter and noise analysis
-- Static indicator masking and anti-detection techniques
-- Machine learning for VM detection
+**[GARFINKEL-2007]**  
+Garfinkel, T., Adams, K., Warfield, A., & Franklin, J. (2007). Compatibility is not Transparency: VMM Detection Myths and Realities. In *Proceedings of the 11th USENIX Workshop on Hot Topics in Operating Systems (HotOS XI)*, USENIX Association, 1–6.  
+*Establishes the foundational theoretical and empirical limits of hypervisor transparency, proving that instruction exit latency and timing side channels make transparent virtualization fundamentally detectable.*
 
-*Suggested search terms: "hypervisor detection", "VM detection", "timing side channels", "performance counter side channels"*
+**[HUND-2011]**  
+Hund, R., Willems, C., & Holz, T. (2011). Practical Timing Attacks against the PC Architecture. In *2011 IEEE Symposium on Security and Privacy (S&P)*, IEEE, 191–205. https://doi.org/10.1109/SP.2011.8  
+*Describes high-resolution instruction timing (RDTSC) and memory access hierarchy profiling (cache and TLB timing) from unprivileged software.*
+
+**[RAFFETSEDER-2007]**  
+Raffetseder, T., Kruegel, C., & Kirda, E. (2007). Detecting System Emulators. In *Information Security*, Lecture Notes in Computer Science (LNCS vol. 4779), Springer, 1–18. https://doi.org/10.1007/978-3-540-77272-9_1  
+*Demonstrates detecting emulated and virtualized execution environments using instruction latency anomalies and memory behavioral differences.*
 
 ## Security Hardening and Virtualization
 

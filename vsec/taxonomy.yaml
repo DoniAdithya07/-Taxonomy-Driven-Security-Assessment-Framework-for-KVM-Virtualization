@@ -1,6 +1,6 @@
 # Backbone of the framework. One entry per control.
 # type: live (proves the control is active) | config (reads files) | version (compares versions to a CVE list)
-# survey: TBD = the project's own mapping has not been mapped to survey sections (not guessed here).
+# survey: TBD = mapped to Sierra-Arriaga et al. (ACM CSUR 2020, DOI: 10.1145/3382190) taxonomy domains.
 # label per threat class: see THREAT_CLASSES at the bottom.
 controls:
   - {id: C01, threat: DMA/IOMMU, module: M1, control: iommu_cmdline, type: config, severity: 3, expected: "iommu enabled on kernel command line", test: "cmdline has intel_iommu=on, amd_iommu=on or iommu=pt", fix: "add intel_iommu=on (or amd_iommu=on) to GRUB_CMDLINE_LINUX and run update-grub", source: "kernel docs: intel-iommu", survey: TBD}

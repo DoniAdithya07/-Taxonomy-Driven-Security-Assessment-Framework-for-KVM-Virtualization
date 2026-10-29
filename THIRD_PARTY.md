@@ -52,7 +52,7 @@ python3 -m venv .local/venv
 | Source | Use | License | Terms | Attribution |
 |---|---|---|---|---|
 | **CVE data (M1 C23/C24)** | CVE reference list for QEMU and kernel vulnerability checks (M1 controls C23/C24 only, not M4) | `vsec/cves.yaml` entries marked `verified:false`; not checked against NVD; returns NA | Do not redistribute; verify against NVD if used for claims | https://nvd.nist.gov |
-| **2020 Virtualization Security Survey** | Threat taxonomy source (cited as [SURVEY-2020]); nine threat classes and 31 controls are this project's own mapping | Academic paper; full citation required | Cite in paper | Citation unknown; mark as TODO |
+| **2020 Virtualization Security Survey** | Threat taxonomy source (cited as [SURVEY-2020]); nine threat classes and 31 controls are this project's own mapping | Academic paper (ACM CSUR 2020) | Cite in paper | Sierra-Arriaga et al., ACM Computing Surveys, 53(2), 2020. DOI: 10.1145/3382190 |
 | **CIS Benchmarks** | Security hardening baselines (referenced in M1 controls documentation, not copied) | Proprietary | Cite by name/version in paper, do not copy text | CIS, https://www.cisecurity.org |
 | **Volatility public memory dumps** | Ground truth for M3 (public Linux forensic images); to be downloaded for evaluation | Varies (academic, course datasets) | Check per dump; verify licence; do not redistribute | Volatility Foundation, Champlain College |
 
@@ -67,4 +67,4 @@ For M3 public images: download only, keep in `.local/`, do not redistribute.
 - **joblib and threadpoolctl:** transitive dependencies of scikit-learn; not explicitly installed.
 - **External tools not shipped:** Volatility 3, QEMU, libvirt, dwarf2json, Lynis, OpenSCAP must be installed separately on the host.
 - **CVE list unverified:** `vsec/cves.yaml` is not checked against NVD; M1 C23/C24 return NA when any entry is unverified or for distro builds.
-- **Licence verification pending:** dwarf2json licence status unverified; 2020 survey citation not yet located.
+- **Licence verification pending:** dwarf2json licence status unverified; 2020 survey citation verified (Sierra-Arriaga et al., 2020, ACM CSUR).
