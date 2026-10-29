@@ -115,7 +115,8 @@ def start_child(kind, state, secret):
             code = proc.wait(timeout=30)
             return code == 0, f"child exit code {code}"
         time.sleep(2)
-        return proc.poll() is None, f"child exited early with code {proc.poll()}"
+        code = proc.poll()
+        return code is None, f"child exited early with code {code}"
     except (BrokenPipeError, subprocess.TimeoutExpired, OSError) as e:
         proc.kill()
         proc.wait()

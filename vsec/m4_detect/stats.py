@@ -32,9 +32,13 @@ def bal_acc(y, s, thr=0.5):
 
 
 def fpr_at_tpr(y, s, tpr=0.95):
-    """Smallest FPR whose TPR >= tpr (conservative, no interpolation)."""
+    """Smallest FPR whose TPR >= tpr (conservative, no interpolation).
+    NaN unless both classes are present and some threshold reaches tpr."""
+    if len(set(np.asarray(y))) < 2:
+        return float("nan")
     fpr, t, _ = roc_curve(y, s)
-    return float(fpr[np.argmax(t >= tpr - 1e-9)])
+    ok = t >= tpr - 1e-9
+    return float(fpr[np.argmax(ok)]) if ok.any() else float("nan")
 
 
 def youden_threshold_ex(y, s):

@@ -17,6 +17,7 @@ import fnmatch
 import getpass
 import os
 import re
+import stat
 import sys
 import zipfile
 from pathlib import Path
@@ -127,11 +128,27 @@ def check_files(root, files):
     if not (root / REQUIRED_FILE).is_file():
         problems.append(f"{REQUIRED_FILE} missing: create it in the repo root before building the submission")
     for rel in files:
-        size = (root / rel).stat().st_size
-        if size > MAX_FILE_BYTES:
-            problems.append(f"{rel}: {size / 1024 / 1024:.1f} MB is over the {MAX_FILE_BYTES // 1024 // 1024} MB limit")
+        # collect_files() already excluded symlinks, but re-open with O_NOFOLLOW + fstat instead of
+        # Path.stat()/read_bytes() (which both follow symlinks): closes the TOCTOU window where `rel`
+        # could be swapped for a symlink to an arbitrary file between the scan and this read.
+        flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_CLOEXEC", 0)
+        fd = os.open(str(root / rel), flags)
+        try:
+            with os.fdopen(fd, "rb") as f:
+                st = os.fstat(f.fileno())
+                if not stat.S_ISREG(st.st_mode):
+                    problems.append(f"{rel}: became a non-regular file (e.g. a symlink) after the file list "
+                                     f"was built, refusing to read it")
+                    continue
+                size = st.st_size
+                if size > MAX_FILE_BYTES:
+                    problems.append(
+                        f"{rel}: {size / 1024 / 1024:.1f} MB is over the {MAX_FILE_BYTES // 1024 // 1024} MB limit")
+                    continue
+                data = f.read()
+        except OSError as e:
+            problems.append(f"{rel}: {e}")
             continue
-        data = (root / rel).read_bytes()
         contents[rel] = data
         text = _as_text(data)
         if text is not None:

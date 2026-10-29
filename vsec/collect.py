@@ -538,11 +538,20 @@ def _run(vm, out, allow_anywhere=False):
     out = Path(out)
     _check_out(out, allow_anywhere)
     xml = virsh_dumpxml(vm)  # fail before creating anything
+    # Re-check right before use: closes the TOCTOU window around the virsh round-trip above, during
+    # which `out` could have been replaced by a symlink. exist_ok=True is deliberately not used:
+    # it treats an existing symlink-to-a-directory as "already there, nothing to do" (pathlib checks
+    # is_dir(), which follows symlinks), silently adopting an attacker-controlled target directory.
+    _check_out(out, allow_anywhere)
     created = not out.exists()
     man = Manifest(vm)
     old_umask = os.umask(0o077)
     try:
-        out.mkdir(mode=0o700, parents=True, exist_ok=True)
+        try:
+            out.mkdir(mode=0o700, parents=True)
+        except FileExistsError:
+            if out.is_symlink() or not out.is_dir():
+                raise ValueError(f"refusing a symlinked or non-directory output path: {out}")
         os.chmod(out, 0o700)
         _store_redacted(out, man, "vm.xml", xml, "xml")
         _store(out, man, "net_isolation.txt", net_isolation(xml), "empty")

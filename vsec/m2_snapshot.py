@@ -42,7 +42,11 @@ VARIANTS = ("split", "utf16", "base64")
 PAGE = 4096
 MIN_ENTRY_BYTES = 16
 REDACT_CHUNK = 64 * 2**20
-REDACT_OVERLAP = 1024
+# Must be >= the longest possible single match so "a match crossing a chunk edge is seen whole"
+# (see redact_file's docstring) actually holds for every current RULE: ssh_key's body is capped at
+# 8192 chars plus the BEGIN/END header/footer (~80 chars). 1024 used to be smaller than that, so a
+# private key straddling a chunk boundary could be silently left unredacted.
+REDACT_OVERLAP = 16384
 _HEX = re.compile(r"([0-9a-fA-F]{2})+")
 MARKER = ROOT / ".local" / "target.reverted"  # written by scripts/preflight_target.py --mark-reverted
 _CELL = re.compile(r"(?:(?:ssh_key|aws|jwt|hex32)/(?:live|freed|exited)(?:/(?:split|utf16|base64))?"
@@ -50,7 +54,7 @@ _CELL = re.compile(r"(?:(?:ssh_key|aws|jwt|hex32)/(?:live|freed|exited)(?:/(?:sp
 
 RULES = {
     # bounded body (<= 8192 chars) that cannot run into the next BEGIN: linear time even on 8000 repeated headers
-    "ssh_key": re.compile(rb"-----BEGIN [A-Z ]*PRIVATE KEY-----(?:(?!-----BEGIN)[A-Za-z0-9+/=\s:,.-]){40,8192}?"
+    "ssh_key": re.compile(rb"-----BEGIN [A-Z ]*PRIVATE KEY-----(?:(?!-----BEGIN)[A-Za-z0-9+/=\s:,.\\-]){40,8192}?"
                           rb"-----END [A-Z ]*PRIVATE KEY-----"),
     "aws_id": re.compile(rb"AKIA[0-9A-Z]{16}"),
     "aws_secret": re.compile(rb"(?i)aws_secret_access_key[\"']?\s*[=:]\s*[\"']?([A-Za-z0-9/+]{40})"),
@@ -74,16 +78,18 @@ def entropy(b):
     return -sum(c / n * math.log2(c / n) for c in (b.count(x) for x in set(b)))
 
 
-def scan(data):
-    """Return [(rule, start, end, matched_bytes)]."""
-    hits = []
+def _matches(data):
+    """Yield (rule, match, group): the group is the secret part (aws_secret: the value after the key name)."""
     for name, rx in RULES.items():
         for m in rx.finditer(data):
             if name == "hex32" and entropy(m.group()) < MIN_ENTROPY:
                 continue
-            g = 1 if name == "aws_secret" else 0
-            hits.append((name, m.start(g), m.end(g), m.group(g)))
-    return hits
+            yield name, m, 1 if name == "aws_secret" else 0
+
+
+def scan(data):
+    """Return [(rule, start, end, matched_bytes)]."""
+    return [(name, m.start(g), m.end(g), m.group(g)) for name, m, g in _matches(data)]
 
 
 def redact(data):
@@ -107,8 +113,10 @@ def redact_file(path, chunk=REDACT_CHUNK, overlap=REDACT_OVERLAP):
             f.seek(pos)
             window = f.read(chunk + overlap)
             last = pos + chunk >= size
-            for _, s, e, _ in scan(window):
-                if s < chunk or last:
+            for _, m, g in _matches(window):
+                s, e = m.start(g), m.end(g)
+                # own the hit by where the whole match starts: the next window cannot see a key name before its start
+                if m.start() < chunk or last:
                     f.seek(pos + s)
                     f.write(bytes(e - s))
                     zeroed += 1

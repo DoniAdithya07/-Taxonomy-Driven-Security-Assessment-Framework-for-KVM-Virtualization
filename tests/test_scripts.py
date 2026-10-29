@@ -298,6 +298,8 @@ def fake_tools(tmp_path, python3_body=None):
     session_qc.py runs for real (so the fake bench's bad CSV is caught) unless python3_body is given."""
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
+    if os.name != "nt":
+        bin_dir.chmod(0o755)
     bench = bin_dir / "bench"
     bench.write_text("#!/bin/sh\necho 'window,workload'\necho '0,x'\n", newline="\n")
     log = tmp_path / "py.log"

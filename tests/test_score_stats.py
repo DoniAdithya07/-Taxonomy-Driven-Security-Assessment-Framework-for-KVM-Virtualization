@@ -33,6 +33,15 @@ def test_fpr_at_tpr_and_auroc():
     assert stats.fpr_at_tpr(y, s, 1.0) == 0.25
 
 
+def test_fpr_at_tpr_unreachable_is_nan_not_zero():
+    # all-False argmax used to pick index 0 and report the best possible FPR (0.0)
+    y = np.array([0, 0, 1, 1])
+    s = np.array([0.1, 0.2, 0.8, 0.9])
+    assert np.isnan(stats.fpr_at_tpr(y, s, 1.01))
+    assert np.isnan(stats.fpr_at_tpr(np.zeros(4), s, 0.95))
+    assert np.isnan(stats.fpr_at_tpr(np.ones(4), s, 0.95))
+
+
 def test_prf_undefined_is_none_not_zero():
     p = score.prf(0, 0, 0, 0)
     assert p["precision"] is p["recall"] is p["f1"] is p["fpr"] is None

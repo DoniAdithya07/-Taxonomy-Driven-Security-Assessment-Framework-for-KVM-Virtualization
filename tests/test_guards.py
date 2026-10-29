@@ -550,8 +550,12 @@ def kit(tmp_path, monkeypatch):
         allow.chmod(0o755)
     mod = allow / "rk.ko"
     mod.write_bytes(b"x")
+    if os.name != "nt":
+        mod.chmod(0o644)
     outside = tmp_path / "evil.ko"
     outside.write_bytes(b"x")
+    if os.name != "nt":
+        outside.chmod(0o644)
     marker = tmp_path / "target.reverted"
     write_marker_json(marker)
     return allow, mod, outside, marker

@@ -234,6 +234,24 @@ def test_redact_file_without_overlap_would_miss_edge_match(tmp_path):
     assert m2.scan(path.read_bytes())  # proves the overlap is what catches it
 
 
+def test_redact_file_aws_secret_whose_key_name_is_before_the_edge(tmp_path):
+    # the value starts past the edge (100) but its key name, which the regex needs, starts before it
+    buf = bytearray(b"." * 400)
+    hit = b"aws_secret_access_key=" + b"Qx7/" * 10
+    buf[80:80 + len(hit)] = hit
+    path = tmp_path / "img.save"
+    path.write_bytes(bytes(buf))
+    assert m2.redact_file(path, chunk=100, overlap=64) == 1
+    assert not m2.scan(path.read_bytes())
+
+
+def test_scanner_finds_json_escaped_pem_key():
+    # a key kept in a JSON string (e.g. a service-account file) has literal \n, not newlines
+    pem = b'{"private_key": "-----BEGIN PRIVATE KEY-----\\n' + b"A" * 64 + b'\\n-----END PRIVATE KEY-----\\n"}'
+    assert [h[0] for h in m2.scan(pem)] == ["ssh_key"]
+    assert not m2.scan(m2.redact(pem))
+
+
 def test_scanner_real_format_variants():
     pem = (b"-----BEGIN RSA PRIVATE KEY-----\nProc-Type: 4,ENCRYPTED\nDEK-Info: AES-128-CBC,0123456789ABCDEF\n\n"
            + b"A" * 64 + b"\n-----END RSA PRIVATE KEY-----")
