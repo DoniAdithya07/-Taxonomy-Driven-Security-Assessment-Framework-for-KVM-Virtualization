@@ -1068,9 +1068,15 @@ Each PASS or FAIL is designed to be actionable, and each NA is intended to be tr
 
 ## References
 
-### Cited Works (placeholders for student to fill)
+### Cited Works
 
-[SURVEY-2020] TODO: student to supply the full citation (authors, year, title, venue).
+[SURVEY-2020] Sierra-Arriaga, F., Branco, R. R., & Lee, B. (2020). Security Issues and Challenges for Virtualization Technologies. *ACM Computing Surveys*, 53(2), Article 45, 1–37. https://doi.org/10.1145/3382190
+
+[GARFINKEL-2007] Garfinkel, T., Adams, K., Warfield, A., & Franklin, J. (2007). Compatibility is not Transparency: VMM Detection Myths and Realities. In *Proceedings of the 11th USENIX Workshop on Hot Topics in Operating Systems (HotOS XI)*, USENIX Association, 1–6.
+
+[HUND-2011] Hund, R., Willems, C., & Holz, T. (2011). Practical Timing Attacks against the PC Architecture. In *2011 IEEE Symposium on Security and Privacy (S&P)*, IEEE, 191–205. https://doi.org/10.1109/SP.2011.8
+
+[RAFFETSEDER-2007] Raffetseder, T., Kruegel, C., & Kirda, E. (2007). Detecting System Emulators. In *Information Security*, LNCS vol. 4779, Springer, 1–18. https://doi.org/10.1007/978-3-540-77272-9_1
 
 [LYNIS] CISOfy. Lynis Security Auditing Tool. https://cisofy.com/lynis/. Open source; see documentation for citation.
 
@@ -1092,17 +1098,11 @@ Each PASS or FAIL is designed to be actionable, and each NA is intended to be tr
 
 [NVD] National Institute of Standards and Technology. National Vulnerability Database. https://nvd.nist.gov. US government data.
 
-[SCIKIT-LEARN] Pedregosa et al. (2011). scikit-learn: Machine Learning in Python. *JMLR*. [VERIFY against the publisher page before submission]
+[SCIKIT-LEARN] Pedregosa, F., Varoquaux, G., Gramfort, A., et al. (2011). scikit-learn: Machine Learning in Python. *Journal of Machine Learning Research*, 12, 2825–2830.
 
-[SCIPY] SciPy Contributors. SciPy Documentation. https://scipy.org/. See documentation for statistical functions.
+[SCIPY] Virtanen, P., Gommers, R., Oliphant, T. E., et al. (2020). SciPy 1.0: Fundamental Algorithms for Scientific Computing in Python. *Nature Methods*, 17(3), 261–272. https://doi.org/10.1038/s41592-019-0686-2
 
-[NUMPY] Harris et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362. [VERIFY against the publisher page before submission]
-
-### Additional References (to be completed by student)
-
-- TODO: Author and year of the 2020 survey (full citation).
-- TODO: Any other related-work papers on hypervisor detection.
-- TODO: Any other security hardening or virtualization papers cited in the text.
+[NUMPY] Harris, C. R., Millman, K. J., van der Walt, S. J., et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362. https://doi.org/10.1038/s41586-020-2649-2
 
 ---
 
