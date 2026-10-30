@@ -317,9 +317,15 @@ def load_dumps(folder):
 
 
 def _iter_mapped(pairs):
+    """One bad dump (permission denied, truncated/corrupted to empty) must not abort the rest of the batch:
+    caught here, inside the generator's own loop, so it can move on to the next pair. Reported via the
+    `dump_error` key on the yielded manifest (data is None), same shape evaluate() already expects."""
     for mem, man in pairs:
-        with open(mem, "rb") as f, mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as data:
-            yield data, man
+        try:
+            with open(mem, "rb") as f, mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as data:
+                yield data, man
+        except (OSError, ValueError) as e:
+            yield None, dict(man, dump_error=f"{mem.name}: {type(e).__name__}: {e}")
 
 
 # ---- evaluation -------------------------------------------------------------------------
@@ -337,12 +343,18 @@ def _ratio_stats(d, p, absent):
 def evaluate(dumps, synthetic=False):
     """Score dumps ((bytes-like, manifest) pairs). Recall is detected / present (all needles found).
     Planted dumps whose needles are NOT all found are counted per cell as `planted_but_absent`, never dropped
-    silently. Raises ValueError for zero dumps or a bad manifest. Redaction overwrites in place, so it adds
+    silently. A dump that load_dumps() could not open or mmap (permission denied, truncated to empty) is
+    reported in `dump_errors` instead of being counted or scored, and never aborts the rest of the batch.
+    Raises ValueError for zero dumps or a bad manifest. Redaction overwrites in place, so it adds
     no size: size_overhead_bytes is 0 by construction (tested via len(redact(x)) == len(x))."""
     cells = defaultdict(lambda: [0, 0, 0])  # cell -> [detected, present, planted_but_absent]
     fp = size = count = total_hits = 0
     scan_seconds = 0.0
+    dump_errors = []
     for i, (data, man) in enumerate(dumps):
+        if data is None and isinstance(man, dict) and "dump_error" in man:
+            dump_errors.append(man["dump_error"])  # one bad dump: NA'd here, the rest of the batch still scores
+            continue
         count += 1
         _validate_manifest(man, f"dump #{i} (cell {man.get('cell')!r})" if isinstance(man, dict) else f"dump #{i}")
         needles = [bytes.fromhex(h) for h in man["needles"]]
@@ -368,7 +380,7 @@ def evaluate(dumps, synthetic=False):
            "synthetic": synthetic, "dumps": count,
            "total_hits": total_hits, "total_bytes": size,
            "false_positives": fp, "gb_scanned": gb, "fp_per_gb": fp / gb if gb else None,
-           "scan_seconds": scan_seconds, "size_overhead_bytes": 0}
+           "scan_seconds": scan_seconds, "size_overhead_bytes": 0, "dump_errors": dump_errors}
     for group in ("plain", "held_out", "real_programs"):
         v = [r for c, r in cells.items() if _group(c) == group]
         out[group] = _ratio_stats(sum(r[0] for r in v), sum(r[1] for r in v), sum(r[2] for r in v))

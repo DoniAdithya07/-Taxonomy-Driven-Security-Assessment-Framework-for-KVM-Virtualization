@@ -460,3 +460,15 @@ Cut: M1 attack-path chains and SHAP (stretch only); M3 second kernel and optiona
 - Improve the M2 scanner only where the plan allows (held-out variants stay "rules written without seeing them"); a real SHA-256 stays a documented false positive.
 
 **E. Open decisions** (also in section 11): licence; `defusedxml`; drop attack paths; whether M1 should carry the synthetic banner (currently marked by `kind: self_consistency` and a note instead); M4 results reported as "EXPLORATORY" if the 15-per-class threshold was not met (affects what analysis section says).
+
+---
+
+## 14. External Plan Review Addendum (2026-10-25)
+
+An outside review (via GPT) of this plan was checked against the actual repo. Per-module pass/fail evidence now lives in `docs/DEFINITION_OF_DONE.md` — tick boxes only once there is a test, log or file behind them. Summary: M1/M2 code and synthetic-test obligations are done; M3 code is done but never run against a real image; M4 analysis code is done but `prereg.md` is still uncommitted and no real session exists. Nothing unchecked there is a coding gap — all of it needs E1, Volatility, or Lynis/OpenSCAP, which only the project owner's hardware can supply.
+
+**Frontend/dashboard decision:** a local Flask dashboard (4 screens: overview, security assessment, experiment results, reports) was proposed as a W7, lowest-priority addition, explicitly the first thing to cut if time is short. It was **not built** during this review: no module has produced real output yet, so there is nothing a dashboard would show beyond the same banners the existing `report.html` already renders. The unified CLI (`python -m vsec run`) already is the single orchestrator — it already standardizes output schemas across M1-M4 and already reports a crashed module as `ERROR` without stopping the others (`vsec/report.py:failed_modules`, covered by `tests/test_report.py`). Build the dashboard only after real M4/M2/M3 data exists, if there's still time.
+
+**Daily routine (solo):** review the day's goal (15 min) → one focused implementation task (2-3 h) → write/update tests (1 h) → run tests and investigate failures (45-60 min) → commit and update docs (20-30 min). Keep one issue list with four severities: **Critical** (wrong security finding, invalid research result, data corruption, unsafe execution), **High** (broken module workflow, major validation failure, unreproducible experiment), **Medium** (edge-case gap, reporting defect), **Low** (cosmetic/doc). Never start a new feature while a Critical is open.
+
+**Statistical caution already covered:** the suggestion to justify the 45-session M4 plan's precision instead of assuming it's "enough" is already in `prereg.md` (Power and limits): AUROC standard error ≈0.08 at 15-per-class, minimum detectable difference ≈0.15-0.2, explicitly stating a null result is not evidence of no difference. No change needed there.

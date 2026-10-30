@@ -588,6 +588,36 @@ def test_a_module_that_raises_gives_exit_1_report_fields_and_a_red_banner(sandbo
     assert "RuntimeError: boom" in (sandbox_dirs / "logs" / "m2_snapshot_privacy.log").read_text()
 
 
+def test_a_crashing_module_does_not_discard_a_real_siblings_findings(sandbox_dirs, monkeypatch):
+    """Every other crash-isolation test stubs the surviving modules to trivial `_na("stub")`, which never
+    proves isolation holds for a module producing REAL findings. Here M1 runs for real against a real
+    fixture folder while M2 crashes, and M1's real results must land in report.json untouched."""
+    def crashing_m2(args):
+        raise RuntimeError("boom")
+    stub_modules(monkeypatch, m1=cli.run_m1, m2=crashing_m2)
+    good = good_case(sandbox_dirs / "good")
+    out = sandbox_dirs / "out"
+    assert main(["run", "--vm", f"good={good}", "--env", "E1", "--out", str(out)]) == 1
+    rep = json.loads((out / "report.json").read_text())
+
+    m1 = rep["modules"]["M1 (audit)"]
+    assert "status" not in m1  # the real M1 run succeeded: no ERROR/NA flag
+    assert m1["kind"] == "self_consistency" and "evaluation_synthetic" in m1
+
+    mine = {f["id"]: f["status"] for f in rep["findings"] if f["vm"] == "good"}
+    assert len(mine) == 28 and "PASS" in mine.values()  # real findings, not empty, not all NA
+    assert "FAIL" not in mine.values() and "ERROR" not in mine.values()
+
+    m2res = rep["modules"]["M2 (snapshot privacy)"]
+    assert m2res["status"] == "ERROR" and "boom" in m2res["reason"]
+    assert rep["modules_failed"] == [{"name": "M2 (snapshot privacy)", "reason": "RuntimeError: boom"}]
+    assert [n["name"] for n in rep["modules_na"]] == ["M3 (forensics)", "M4 (hypervisor detection)"]
+
+    html = (out / "report.html").read_text()
+    assert "MODULES FAILED" in html and "M2 (snapshot privacy): RuntimeError: boom" in html
+    assert html.index("MODULES FAILED") < html.index("<h1>")
+
+
 def test_na_modules_alone_exit_0_but_warn(sandbox_dirs, monkeypatch, capsys):
     stub_modules(monkeypatch)
     out = sandbox_dirs / "out"

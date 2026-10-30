@@ -100,6 +100,30 @@ def test_load_dumps_errors(tmp_path):
         m2.load_dumps(tmp_path)
 
 
+def test_one_unreadable_dump_does_not_abort_the_rest_of_the_batch(tmp_path, monkeypatch):
+    """A permission-denied (or corrupt-to-open) .mem file among otherwise-good dumps must not raise and
+    discard the whole batch: the good dumps are still scored, and only the bad one is flagged."""
+    for i, (data, man) in enumerate(m2.synthetic_dumps(n=1, size=64 * 1024)):
+        if i == 2:
+            break
+        (tmp_path / f"d{i}.mem").write_bytes(data)
+        (tmp_path / f"d{i}.json").write_text(json.dumps(man))
+    (tmp_path / "bad.mem").write_bytes(b"x" * 64)
+    (tmp_path / "bad.json").write_text(json.dumps({"cell": "aws/live", "needles": []}))
+
+    real_open = open
+
+    def fake_open(path, *a, **k):
+        if Path(path).name == "bad.mem":
+            raise PermissionError(13, "Permission denied", str(path))
+        return real_open(path, *a, **k)
+
+    monkeypatch.setattr(m2, "open", fake_open, raising=False)
+    res = m2.evaluate(m2.load_dumps(tmp_path))
+    assert res["dumps"] == 2 and res["plain"]["present"] == 2  # good dumps still scored
+    assert len(res["dump_errors"]) == 1 and "bad.mem" in res["dump_errors"][0]
+
+
 def test_evaluate_rejects_bad_manifests():
     with pytest.raises(ValueError, match="needles"):
         m2.evaluate([(b"x", {"cell": "aws/live"})])
